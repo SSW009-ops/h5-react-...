@@ -6,7 +6,7 @@ export interface Order {
   title: string;
   description: string;
   reward: number;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   creator_id: string;
   runner_id: string | null;
   contact: string | null;
@@ -24,6 +24,7 @@ const statusMap: Record<string, { label: string; className: string }> = {
   pending: { label: '待接单', className: 'bg-warning/10 text-warning' },
   in_progress: { label: '进行中', className: 'bg-primary/10 text-primary' },
   completed: { label: '已完成', className: 'bg-success/10 text-success' },
+  cancelled: { label: '已取消', className: 'bg-destructive/10 text-destructive' },
 };
 
 const OrderCard = ({ order, onGrab, showGrab = false }: OrderCardProps) => {

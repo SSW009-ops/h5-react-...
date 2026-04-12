@@ -60,9 +60,7 @@ const OrderHall = () => {
         ) : (
           orders.map((order) => (
             <div key={order.id} onClick={() => setSelectedOrder(order)} className="cursor-pointer">
-              <OrderCard
-                order={order}
-              />
+              <OrderCard order={order} />
             </div>
           ))
         )}

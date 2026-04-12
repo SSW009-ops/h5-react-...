@@ -3,9 +3,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import OrderCard, { Order } from '@/components/OrderCard';
+import OrderDetailDialog from '@/components/OrderDetailDialog';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
+import { toast } from 'sonner';
 
 const MyOrders = () => {
   const { user, signOut } = useAuth();
@@ -13,21 +15,67 @@ const MyOrders = () => {
   const [tab, setTab] = useState<'posted' | 'accepted'>('posted');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const fetchOrders = async () => {
+    if (!user) return;
+    setLoading(true);
+    const query = tab === 'posted'
+      ? supabase.from('orders').select('*').eq('creator_id', user.id)
+      : supabase.from('orders').select('*').eq('runner_id', user.id);
+    
+    const { data } = await query.order('created_at', { ascending: false });
+    setOrders((data as Order[]) || []);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (!user) return;
-    const fetchOrders = async () => {
-      setLoading(true);
-      const query = tab === 'posted'
-        ? supabase.from('orders').select('*').eq('creator_id', user.id)
-        : supabase.from('orders').select('*').eq('runner_id', user.id);
-      
-      const { data } = await query.order('created_at', { ascending: false });
-      setOrders((data as Order[]) || []);
-      setLoading(false);
-    };
     fetchOrders();
   }, [user, tab]);
+
+  const handleComplete = async (id: string) => {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: 'completed' })
+      .eq('id', id)
+      .eq('status', 'in_progress');
+    if (error) {
+      toast.error('操作失败，请重试');
+      return;
+    }
+    toast.success('订单已完成！');
+    fetchOrders();
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', id)
+      .eq('status', 'pending')
+      .eq('creator_id', user!.id);
+    if (error) {
+      toast.error('删除失败，请重试');
+      return;
+    }
+    toast.success('订单已删除');
+    fetchOrders();
+  };
+
+  const handleCancel = async (id: string) => {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: 'cancelled', runner_id: null })
+      .eq('id', id)
+      .eq('status', 'in_progress')
+      .eq('creator_id', user!.id);
+    if (error) {
+      toast.error('取消失败，请重试');
+      return;
+    }
+    toast.success('订单已取消');
+    fetchOrders();
+  };
 
   if (!user) {
     return (
@@ -51,7 +99,6 @@ const MyOrders = () => {
         </button>
       </div>
 
-      {/* Tabs */}
       <div className="flex mx-4 mt-4 bg-card rounded-xl p-1 border border-border">
         <button
           onClick={() => setTab('posted')}
@@ -80,10 +127,24 @@ const MyOrders = () => {
           </div>
         ) : (
           orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
+            <div key={order.id} onClick={() => setSelectedOrder(order)} className="cursor-pointer">
+              <OrderCard order={order} />
+            </div>
           ))
         )}
       </div>
+
+      <OrderDetailDialog
+        order={selectedOrder}
+        open={!!selectedOrder}
+        onOpenChange={(open) => !open && setSelectedOrder(null)}
+        canGrab={false}
+        isCreator={!!selectedOrder && selectedOrder.creator_id === user.id}
+        isRunner={!!selectedOrder && selectedOrder.runner_id === user.id}
+        onComplete={handleComplete}
+        onDelete={handleDelete}
+        onCancel={handleCancel}
+      />
 
       <BottomNav />
     </div>

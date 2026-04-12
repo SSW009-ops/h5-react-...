@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Package } from 'lucide-react';
 
@@ -11,6 +12,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -24,20 +26,34 @@ const Login = () => {
       toast.error('密码至少6位');
       return;
     }
-    setLoading(true);
-    try {
-      if (isLogin) {
+
+    if (isLogin) {
+      setLoading(true);
+      try {
         const { error } = await signIn(email, password);
         if (error) throw error;
         toast.success('登录成功');
         navigate('/');
-      } else {
-        const { error } = await signUp(email, password);
-        if (error) throw error;
-        toast.success('注册成功，请查看邮箱确认');
+      } catch (err: any) {
+        toast.error(err.message || '登录失败');
+      } finally {
+        setLoading(false);
       }
+    } else {
+      // Show disclaimer before registering
+      setShowDisclaimer(true);
+    }
+  };
+
+  const handleAgreeAndRegister = async () => {
+    setShowDisclaimer(false);
+    setLoading(true);
+    try {
+      const { error } = await signUp(email, password);
+      if (error) throw error;
+      toast.success('注册成功，请查看邮箱确认');
     } catch (err: any) {
-      toast.error(err.message || '操作失败');
+      toast.error(err.message || '注册失败');
     } finally {
       setLoading(false);
     }
@@ -84,6 +100,26 @@ const Login = () => {
           </button>
         </p>
       </div>
+
+      {/* Disclaimer Dialog */}
+      <Dialog open={showDisclaimer} onOpenChange={setShowDisclaimer}>
+        <DialogContent className="max-w-sm mx-auto rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-base">免责声明</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            本平台仅提供信息撮合服务，交易过程中发生的任何损失、纠纷均与平台无关，由交易双方自行承担责任。
+          </p>
+          <DialogFooter className="flex-row gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setShowDisclaimer(false)}>
+              取消
+            </Button>
+            <Button className="flex-1" onClick={handleAgreeAndRegister}>
+              同意并继续
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
