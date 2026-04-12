@@ -12,6 +12,7 @@ const CreateOrder = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [reward, setReward] = useState('');
+  const [contact, setContact] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const CreateOrder = () => {
       navigate('/login');
       return;
     }
-    if (!title.trim() || !description.trim() || !reward.trim()) {
+    if (!title.trim() || !description.trim() || !reward.trim() || !contact.trim()) {
       toast.error('请填写完整信息');
       return;
     }
@@ -38,6 +39,7 @@ const CreateOrder = () => {
       title: title.trim(),
       description: description.trim(),
       reward: rewardNum,
+      contact: contact.trim(),
       status: 'pending',
       creator_id: user.id,
     });
@@ -77,6 +79,16 @@ const CreateOrder = () => {
             onChange={(e) => setDescription(e.target.value)}
             className="rounded-xl bg-card min-h-[120px]"
             maxLength={500}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-foreground mb-1.5 block">联系方式</label>
+          <Input
+            placeholder="请输入微信号或手机号"
+            value={contact}
+            onChange={(e) => setContact(e.target.value)}
+            className="h-12 rounded-xl bg-card"
+            maxLength={30}
           />
         </div>
         <div>
