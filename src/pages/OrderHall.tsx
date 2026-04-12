@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 const OrderHall = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const { user } = useAuth();
 
   const fetchOrders = async () => {
