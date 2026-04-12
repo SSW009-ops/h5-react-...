@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import OrderCard, { Order } from '@/components/OrderCard';
+import OrderDetailDialog from '@/components/OrderDetailDialog';
 import BottomNav from '@/components/BottomNav';
 import { toast } from 'sonner';
 
 const OrderHall = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const { user } = useAuth();
 
   const fetchOrders = async () => {
@@ -57,15 +59,22 @@ const OrderHall = () => {
           <div className="text-center text-muted-foreground text-sm py-12">暂无待接订单</div>
         ) : (
           orders.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              showGrab={!!user && order.creator_id !== user.id}
-              onGrab={handleGrab}
-            />
+            <div key={order.id} onClick={() => setSelectedOrder(order)} className="cursor-pointer">
+              <OrderCard
+                order={order}
+              />
+            </div>
           ))
         )}
       </div>
+
+      <OrderDetailDialog
+        order={selectedOrder}
+        open={!!selectedOrder}
+        onOpenChange={(open) => !open && setSelectedOrder(null)}
+        canGrab={!!user && !!selectedOrder && selectedOrder.creator_id !== user.id}
+        onGrab={handleGrab}
+      />
 
       <BottomNav />
     </div>
