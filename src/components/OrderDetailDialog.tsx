@@ -8,7 +8,12 @@ interface OrderDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onGrab?: (id: string) => void;
+  onComplete?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onCancel?: (id: string) => void;
   canGrab?: boolean;
+  isCreator?: boolean;
+  isRunner?: boolean;
 }
 
 function getTimeAgo(dateStr: string): string {
@@ -26,9 +31,10 @@ const statusMap: Record<string, { label: string; className: string }> = {
   pending: { label: '待接单', className: 'bg-warning/10 text-warning' },
   in_progress: { label: '进行中', className: 'bg-primary/10 text-primary' },
   completed: { label: '已完成', className: 'bg-success/10 text-success' },
+  cancelled: { label: '已取消', className: 'bg-destructive/10 text-destructive' },
 };
 
-const OrderDetailDialog = ({ order, open, onOpenChange, onGrab, canGrab }: OrderDetailDialogProps) => {
+const OrderDetailDialog = ({ order, open, onOpenChange, onGrab, onComplete, onDelete, onCancel, canGrab, isCreator, isRunner }: OrderDetailDialogProps) => {
   if (!order) return null;
   const status = statusMap[order.status] || statusMap.pending;
 
@@ -64,20 +70,56 @@ const OrderDetailDialog = ({ order, open, onOpenChange, onGrab, canGrab }: Order
             <span className="text-primary font-bold text-xl">¥{order.reward}</span>
           </div>
 
-          {order.status === 'pending' && (
+          {/* Grab button for pending orders */}
+          {order.status === 'pending' && canGrab && onGrab && (
             <Button
               className="w-full"
               onClick={() => {
-                if (!canGrab) {
-                  // Will show toast from parent or redirect
-                }
-                if (onGrab) {
-                  onGrab(order.id);
-                  onOpenChange(false);
-                }
+                onGrab(order.id);
+                onOpenChange(false);
               }}
             >
               立即抢单
+            </Button>
+          )}
+
+          {/* Complete button for runner on in_progress orders */}
+          {order.status === 'in_progress' && isRunner && onComplete && (
+            <Button
+              className="w-full"
+              onClick={() => {
+                onComplete(order.id);
+                onOpenChange(false);
+              }}
+            >
+              确认完成
+            </Button>
+          )}
+
+          {/* Creator actions */}
+          {isCreator && order.status === 'pending' && onDelete && (
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => {
+                onDelete(order.id);
+                onOpenChange(false);
+              }}
+            >
+              删除订单
+            </Button>
+          )}
+
+          {isCreator && order.status === 'in_progress' && onCancel && (
+            <Button
+              variant="outline"
+              className="w-full border-destructive text-destructive hover:bg-destructive/10"
+              onClick={() => {
+                onCancel(order.id);
+                onOpenChange(false);
+              }}
+            >
+              取消订单
             </Button>
           )}
         </div>
