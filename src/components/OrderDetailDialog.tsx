@@ -57,12 +57,17 @@ const OrderDetailDialog = ({ order, open, onOpenChange, onGrab, canGrab }: Order
             <span className="text-primary font-bold text-xl">¥{order.reward}</span>
           </div>
 
-          {canGrab && order.status === 'pending' && onGrab && (
+          {order.status === 'pending' && (
             <Button
               className="w-full"
               onClick={() => {
-                onGrab(order.id);
-                onOpenChange(false);
+                if (!canGrab) {
+                  // Will show toast from parent or redirect
+                }
+                if (onGrab) {
+                  onGrab(order.id);
+                  onOpenChange(false);
+                }
               }}
             >
               立即抢单
