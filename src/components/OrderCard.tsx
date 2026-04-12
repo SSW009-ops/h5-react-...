@@ -9,6 +9,7 @@ export interface Order {
   status: 'pending' | 'in_progress' | 'completed';
   creator_id: string;
   runner_id: string | null;
+  contact: string | null;
   created_at: string;
 }
 

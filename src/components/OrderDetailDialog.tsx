@@ -49,6 +49,13 @@ const OrderDetailDialog = ({ order, open, onOpenChange, onGrab, canGrab }: Order
             <p className="text-sm text-foreground leading-relaxed">{order.description}</p>
           </div>
 
+          {order.status !== 'pending' && order.contact && (
+            <div className="bg-muted/50 rounded-lg p-3">
+              <p className="text-xs text-muted-foreground mb-1">顾客联系方式</p>
+              <p className="text-sm text-foreground font-medium">{order.contact}</p>
+            </div>
+          )}
+
           <div className="flex items-center justify-between border-t border-border pt-3">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Clock className="w-3 h-3" />
