@@ -59,12 +59,11 @@ const OrderHall = () => {
           <div className="text-center text-muted-foreground text-sm py-12">暂无待接订单</div>
         ) : (
           orders.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              showGrab={!!user && order.creator_id !== user.id}
-              onGrab={handleGrab}
-            />
+            <div key={order.id} onClick={() => setSelectedOrder(order)} className="cursor-pointer">
+              <OrderCard
+                order={order}
+              />
+            </div>
           ))
         )}
       </div>
