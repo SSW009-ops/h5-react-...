@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import OrderCard, { Order } from '@/components/OrderCard';
+import OrderDetailDialog from '@/components/OrderDetailDialog';
 import BottomNav from '@/components/BottomNav';
 import { toast } from 'sonner';
 
