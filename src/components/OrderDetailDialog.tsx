@@ -97,7 +97,7 @@ const OrderDetailDialog = ({ order, open, onOpenChange, onGrab, onComplete, onDe
           )}
 
           {/* Creator actions */}
-          {isCreator && order.status === 'pending' && onDelete && (
+          {isCreator && (order.status === 'pending' || order.status === 'completed') && onDelete && (
             <Button
               variant="destructive"
               className="w-full"
