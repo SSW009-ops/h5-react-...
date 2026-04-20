@@ -57,7 +57,7 @@ const MyOrders = () => {
       .from('orders')
       .delete()
       .eq('id', id)
-      .eq('status', 'pending')
+      .in('status', ['pending', 'completed'])
       .eq('creator_id', user!.id)
       .select();
     if (error) {
@@ -65,7 +65,7 @@ const MyOrders = () => {
       return;
     }
     if (!data || data.length === 0) {
-      toast.error('删除失败：无权限或订单已被接单（请检查 RLS 策略）');
+      toast.error('删除失败：无权限或订单状态不允许（请检查 RLS 策略）');
       return;
     }
     toast.success('订单已删除');

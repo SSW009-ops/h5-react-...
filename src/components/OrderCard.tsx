@@ -39,7 +39,6 @@ const OrderCard = ({ order, onGrab, showGrab = false }: OrderCardProps) => {
           {status.label}
         </span>
       </div>
-      <p className="text-muted-foreground text-xs mb-3 line-clamp-2">{order.description}</p>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
