@@ -55,7 +55,7 @@ const OrderDetailDialog = ({ order, open, onOpenChange, onGrab, onComplete, onDe
             <p className="text-sm text-foreground leading-relaxed">{order.description}</p>
           </div>
 
-          {order.status !== 'pending' && order.contact && (
+          {order.contact && (canGrab ? order.status !== 'pending' : true) && (
             <div className="bg-muted/50 rounded-lg p-3">
               <p className="text-xs text-muted-foreground mb-1">顾客联系方式</p>
               <p className="text-sm text-foreground font-medium">{order.contact}</p>
