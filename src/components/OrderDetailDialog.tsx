@@ -83,8 +83,8 @@ const OrderDetailDialog = ({ order, open, onOpenChange, onGrab, onComplete, onDe
             </Button>
           )}
 
-          {/* Complete button for runner on in_progress orders */}
-          {order.status === 'in_progress' && isRunner && onComplete && (
+          {/* Complete button: runner on in_progress, or creator on active orders */}
+          {onComplete && ((order.status === 'in_progress' && (isRunner || isCreator)) || (order.status === 'pending' && isCreator)) && (
             <Button
               className="w-full"
               onClick={() => {
