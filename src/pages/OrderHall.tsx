@@ -70,7 +70,7 @@ const OrderHall = () => {
         order={selectedOrder}
         open={!!selectedOrder}
         onOpenChange={(open) => !open && setSelectedOrder(null)}
-        canGrab={!!user && !!selectedOrder && selectedOrder.creator_id !== user.id}
+        canGrab={!user || (!!selectedOrder && selectedOrder.creator_id !== user.id)}
         onGrab={handleGrab}
       />
 
