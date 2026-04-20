@@ -16,7 +16,7 @@ const OrderHall = () => {
     const { data } = await supabase
       .from('orders')
       .select('*')
-      .eq('status', 'pending')
+      .in('status', ['pending', 'in_progress'])
       .order('created_at', { ascending: false });
     setOrders((data as Order[]) || []);
     setLoading(false);
