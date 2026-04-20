@@ -34,13 +34,18 @@ const MyOrders = () => {
   }, [user, tab]);
 
   const handleComplete = async (id: string) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('orders')
       .update({ status: 'completed' })
       .eq('id', id)
-      .eq('status', 'in_progress');
+      .in('status', ['in_progress', 'pending'])
+      .select();
     if (error) {
-      toast.error('操作失败，请重试');
+      toast.error(`操作失败：${error.message}`);
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast.error('操作失败：无权限或订单状态不允许（请检查 RLS 策略）');
       return;
     }
     toast.success('订单已完成！');
@@ -48,14 +53,19 @@ const MyOrders = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('orders')
       .delete()
       .eq('id', id)
       .eq('status', 'pending')
-      .eq('creator_id', user!.id);
+      .eq('creator_id', user!.id)
+      .select();
     if (error) {
-      toast.error('删除失败，请重试');
+      toast.error(`删除失败：${error.message}`);
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast.error('删除失败：无权限或订单已被接单（请检查 RLS 策略）');
       return;
     }
     toast.success('订单已删除');
@@ -63,14 +73,19 @@ const MyOrders = () => {
   };
 
   const handleCancel = async (id: string) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('orders')
       .update({ status: 'cancelled', runner_id: null })
       .eq('id', id)
-      .eq('status', 'in_progress')
-      .eq('creator_id', user!.id);
+      .in('status', ['pending', 'in_progress'])
+      .eq('creator_id', user!.id)
+      .select();
     if (error) {
-      toast.error('取消失败，请重试');
+      toast.error(`取消失败：${error.message}`);
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast.error('取消失败：无权限或订单状态不允许（请检查 RLS 策略）');
       return;
     }
     toast.success('订单已取消');
