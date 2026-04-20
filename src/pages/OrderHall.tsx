@@ -70,7 +70,7 @@ const OrderHall = () => {
         order={selectedOrder}
         open={!!selectedOrder}
         onOpenChange={(open) => !open && setSelectedOrder(null)}
-        canGrab={!!selectedOrder && !!user && selectedOrder.status === 'pending' && selectedOrder.creator_id !== user.id}
+        canGrab={!!selectedOrder && !!user && selectedOrder.status === 'pending'}
         onGrab={handleGrab}
       />
 
