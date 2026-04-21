@@ -6,8 +6,9 @@ import OrderCard, { Order } from '@/components/OrderCard';
 import OrderDetailDialog from '@/components/OrderDetailDialog';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, Store, Shield, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const MyOrders = () => {
   const { user, signOut } = useAuth();
@@ -16,6 +17,7 @@ const MyOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const { isAdmin } = useUserRole();
 
   const fetchOrders = async () => {
     if (!user) return;
@@ -112,6 +114,38 @@ const MyOrders = () => {
         <button onClick={signOut} className="text-muted-foreground p-2">
           <LogOut className="w-5 h-5" />
         </button>
+      </div>
+
+      {/* Entries */}
+      <div className="mx-4 mt-4 bg-card rounded-xl border border-border overflow-hidden">
+        <button
+          onClick={() => navigate('/merchant-onboarding')}
+          className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors border-b border-border"
+        >
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Store className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-sm font-medium text-foreground">商家入驻</div>
+            <div className="text-xs text-muted-foreground">入驻附近外卖，曝光更多客户</div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
+        {isAdmin && (
+          <button
+            onClick={() => navigate('/admin')}
+            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors"
+          >
+            <div className="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
+              <Shield className="w-4 h-4 text-warning" />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="text-sm font-medium text-foreground">管理员后台</div>
+              <div className="text-xs text-muted-foreground">商家审核、账号封禁</div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+        )}
       </div>
 
       <div className="flex mx-4 mt-4 bg-card rounded-xl p-1 border border-border">

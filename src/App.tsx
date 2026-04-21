@@ -9,6 +9,10 @@ import Login from "./pages/Login";
 import OrderHall from "./pages/OrderHall";
 import CreateOrder from "./pages/CreateOrder";
 import MyOrders from "./pages/MyOrders";
+import MerchantOnboarding from "./pages/MerchantOnboarding";
+import MerchantDetail from "./pages/MerchantDetail";
+import NearbyList from "./pages/NearbyList";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +30,10 @@ const App = () => (
             <Route path="/hall" element={<OrderHall />} />
             <Route path="/create" element={<CreateOrder />} />
             <Route path="/mine" element={<MyOrders />} />
+            <Route path="/merchant-onboarding" element={<MerchantOnboarding />} />
+            <Route path="/merchant/:id" element={<MerchantDetail />} />
+            <Route path="/nearby" element={<NearbyList />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

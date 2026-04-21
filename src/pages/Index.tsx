@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import BannerCarousel from '@/components/BannerCarousel';
+import NearbyTakeaway from '@/components/NearbyTakeaway';
 import OrderCard, { Order } from '@/components/OrderCard';
 import BottomNav from '@/components/BottomNav';
 import { Package } from 'lucide-react';
@@ -52,6 +53,9 @@ const Index = () => {
           </div>
         ))}
       </div>
+
+      {/* Nearby Takeaway */}
+      <NearbyTakeaway />
 
       {/* Recent Orders */}
       <div className="mx-4 mt-6">
