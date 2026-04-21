@@ -3,9 +3,7 @@ import { useState, useEffect } from 'react';
 const noticeText = '注意事项：不要在发布任务时填写取件码，以免丢失，与跑腿人员建立联系之后再将关键信息告与对方';
 
 const banners = [
-  { id: 1, title: '新用户注册立享优惠', subtitle: '首单立减5元', bg: 'from-primary to-warning' },
-  { id: 2, title: '跑腿员招募中', subtitle: '灵活接单，轻松赚钱', bg: 'from-success to-primary' },
-  { id: 3, title: '限时活动', subtitle: '邀请好友各得10元红包', bg: 'from-destructive to-primary' },
+  { id: 1, title: '所有人都可接单', subtitle: '灵活接单，轻松赚钱', bg: 'from-success to-primary' },
 ];
 
 const BannerCarousel = () => {
