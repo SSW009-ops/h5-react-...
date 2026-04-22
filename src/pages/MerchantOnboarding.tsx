@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -39,13 +39,23 @@ const MerchantOnboarding = () => {
     { product_name: '', price: '', image_url: '' },
   ]);
 
+  // qualification uploads
+  const [businessLicense, setBusinessLicense] = useState('');
+  const [foodLicense, setFoodLicense] = useState('');
+  const [storefrontPhoto, setStorefrontPhoto] = useState('');
+  const [qualUploading, setQualUploading] = useState<Record<string, boolean>>({});
+
   // payment dialog
   const [payOpen, setPayOpen] = useState(false);
   const [createdMerchantId, setCreatedMerchantId] = useState<string | null>(null);
-  const [payAmount, setPayAmount] = useState<number>(30);
+  const [payDays, setPayDays] = useState<number>(30);
   const [payScreenshot, setPayScreenshot] = useState<string>('');
   const [payUploading, setPayUploading] = useState(false);
   const [paySubmitting, setPaySubmitting] = useState(false);
+
+  // swipe-to-delete state for existing record
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -88,6 +98,19 @@ const MerchantOnboarding = () => {
     );
   };
 
+  const handleQualUpload = async (
+    key: 'business' | 'food' | 'storefront',
+    file: File
+  ) => {
+    setQualUploading((s) => ({ ...s, [key]: true }));
+    const url = await uploadImage(file);
+    setQualUploading((s) => ({ ...s, [key]: false }));
+    if (!url) return;
+    if (key === 'business') setBusinessLicense(url);
+    if (key === 'food') setFoodLicense(url);
+    if (key === 'storefront') setStorefrontPhoto(url);
+  };
+
   const addProduct = () => {
     if (products.length >= 20) {
       toast.error('最多 20 个产品');
@@ -108,12 +131,14 @@ const MerchantOnboarding = () => {
     if (!storeName.trim()) return toast.error('请填写店铺名称');
     if (storeName.length > 50) return toast.error('店铺名称过长');
     if (!/^1[3-9]\d{9}$/.test(contactPhone.trim())) return toast.error('请填写有效的手机号');
+    if (!businessLicense) return toast.error('请上传营业执照');
+    if (!foodLicense) return toast.error('请上传食品经营许可证 / 健康证');
+    if (!storefrontPhoto) return toast.error('请上传门店实景照片');
     const validProducts = products.filter((p) => p.product_name.trim() && p.price.trim() && p.image_url);
     if (validProducts.length === 0) return toast.error('请至少添加一个产品（含名称、价格、图片）');
 
     setSubmitting(true);
 
-    // upsert merchant
     const { data: merchant, error: mErr } = await supabase
       .from('merchants')
       .upsert(
@@ -122,6 +147,9 @@ const MerchantOnboarding = () => {
           store_name: storeName.trim(),
           contact_phone: contactPhone.trim(),
           contact_wechat: contactWechat.trim() || null,
+          business_license_url: businessLicense,
+          food_license_url: foodLicense,
+          storefront_photo_url: storefrontPhoto,
           status: 'pending',
         },
         { onConflict: 'user_id' }
@@ -135,7 +163,6 @@ const MerchantOnboarding = () => {
       return;
     }
 
-    // replace products
     await supabase.from('merchant_products').delete().eq('merchant_id', merchant.id);
     const rows = validProducts.map((p, idx) => ({
       merchant_id: merchant.id,
@@ -165,15 +192,15 @@ const MerchantOnboarding = () => {
 
   const submitPayment = async () => {
     if (!user || !createdMerchantId) return;
-    if (payAmount < 30) return toast.error('最低 30 元');
+    if (!payDays || payDays < 30) return toast.error('最低 30 天');
     if (!payScreenshot) return toast.error('请上传付款截图');
 
     setPaySubmitting(true);
     const { error } = await supabase.from('merchant_payments').insert({
       merchant_id: createdMerchantId,
       user_id: user.id,
-      amount: payAmount,
-      days_purchased: payAmount, // 1 元 = 1 天
+      amount: payDays, // 1 元 = 1 天，金额 = 天数
+      days_purchased: payDays,
       payment_screenshot_url: payScreenshot,
     });
     setPaySubmitting(false);
@@ -185,6 +212,34 @@ const MerchantOnboarding = () => {
     toast.success('付款记录已提交，等待管理员审核');
     setPayOpen(false);
     navigate('/mine');
+  };
+
+  const deleteApplication = async () => {
+    if (!existing) return;
+    if (!confirm('确认删除此入驻申请？')) return;
+    // delete payments + products + merchant
+    await supabase.from('merchant_payments').delete().eq('merchant_id', existing.id);
+    await supabase.from('merchant_products').delete().eq('merchant_id', existing.id);
+    const { error } = await supabase.from('merchants').delete().eq('id', existing.id);
+    if (error) return toast.error(`删除失败：${error.message}`);
+    toast.success('已删除');
+    setExisting(null);
+    setSwipeOffset(0);
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current == null) return;
+    const dx = e.touches[0].clientX - touchStartX.current;
+    if (dx < 0) setSwipeOffset(Math.max(dx, -88));
+    else setSwipeOffset(0);
+  };
+  const onTouchEnd = () => {
+    if (swipeOffset < -40) setSwipeOffset(-88);
+    else setSwipeOffset(0);
+    touchStartX.current = null;
   };
 
   if (!user) {
@@ -200,43 +255,100 @@ const MerchantOnboarding = () => {
     return <div className="min-h-screen bg-background flex items-center justify-center text-sm text-muted-foreground">加载中...</div>;
   }
 
-  // already approved or pending: show status
+  // already approved or pending: show status with swipe-to-delete
   if (existing && existing.status !== 'rejected') {
     const isActive = existing.status === 'active' && existing.ad_expires_at && new Date(existing.ad_expires_at) > new Date();
+    const canDelete = !isActive; // only allow delete when not currently active
     return (
       <div className="min-h-screen bg-background pb-20">
         <div className="bg-card px-4 pt-12 pb-4 flex items-center gap-3 border-b border-border">
           <button onClick={() => navigate(-1)}><ChevronLeft className="w-5 h-5" /></button>
           <h1 className="text-base font-bold">商家中心</h1>
         </div>
-        <div className="mx-4 mt-6 bg-card rounded-2xl p-6 border border-border">
-          <h2 className="text-lg font-bold">{existing.store_name}</h2>
-          <div className="mt-3 text-sm">
-            状态：
-            {isActive ? (
-              <span className="text-success font-medium">广告位已激活</span>
-            ) : existing.status === 'pending' ? (
-              <span className="text-warning font-medium">待管理员审核</span>
-            ) : (
-              <span className="text-muted-foreground">已过期</span>
-            )}
-          </div>
-          {isActive && existing.ad_expires_at && (
-            <div className="mt-1 text-xs text-muted-foreground">
-              到期时间：{new Date(existing.ad_expires_at).toLocaleString('zh-CN')}
-            </div>
+
+        <div className="mx-4 mt-6 relative overflow-hidden rounded-2xl">
+          {canDelete && (
+            <button
+              onClick={deleteApplication}
+              className="absolute right-0 top-0 bottom-0 w-22 bg-destructive text-destructive-foreground flex items-center justify-center text-sm font-medium px-4"
+              style={{ width: 88 }}
+            >
+              <Trash2 className="w-4 h-4 mr-1" /> 删除
+            </button>
           )}
-          <Button
-            className="mt-5 w-full"
-            onClick={() => {
-              setCreatedMerchantId(existing.id);
-              setPayOpen(true);
-            }}
+          <div
+            className="bg-card p-6 border border-border rounded-2xl transition-transform"
+            style={{ transform: `translateX(${swipeOffset}px)` }}
+            onTouchStart={canDelete ? onTouchStart : undefined}
+            onTouchMove={canDelete ? onTouchMove : undefined}
+            onTouchEnd={canDelete ? onTouchEnd : undefined}
           >
-            续费 / 追加广告位天数
-          </Button>
+            <h2 className="text-lg font-bold">{existing.store_name}</h2>
+            <div className="mt-3 text-sm">
+              状态：
+              {isActive ? (
+                <span className="text-success font-medium">广告位已激活</span>
+              ) : existing.status === 'pending' ? (
+                <span className="text-warning font-medium">待管理员审核</span>
+              ) : (
+                <span className="text-muted-foreground">已过期</span>
+              )}
+            </div>
+            {isActive && existing.ad_expires_at && (
+              <div className="mt-1 text-xs text-muted-foreground">
+                到期时间：{new Date(existing.ad_expires_at).toLocaleString('zh-CN')}
+              </div>
+            )}
+            {canDelete && (
+              <div className="mt-2 text-[11px] text-muted-foreground">
+                提示：左滑可删除此申请
+              </div>
+            )}
+            <Button
+              className="mt-5 w-full"
+              onClick={() => {
+                setCreatedMerchantId(existing.id);
+                setPayOpen(true);
+              }}
+            >
+              续费 / 追加广告位天数
+            </Button>
+          </div>
         </div>
         {renderPayDialog()}
+      </div>
+    );
+  }
+
+  function renderQualUpload(
+    key: 'business' | 'food' | 'storefront',
+    label: string,
+    url: string
+  ) {
+    const uploading = qualUploading[key];
+    return (
+      <div>
+        <Label className="text-xs">{label} *</Label>
+        <label className="mt-1 block">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && handleQualUpload(key, e.target.files[0])}
+          />
+          <div className="border-2 border-dashed border-border rounded-lg h-28 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-muted/30">
+            {uploading ? (
+              <span className="text-xs text-muted-foreground">上传中...</span>
+            ) : url ? (
+              <img src={url} alt={label} className="h-full object-contain" />
+            ) : (
+              <div className="text-center">
+                <Upload className="w-4 h-4 mx-auto text-muted-foreground" />
+                <span className="text-[11px] text-muted-foreground mt-1 block">点击上传</span>
+              </div>
+            )}
+          </div>
+        </label>
       </div>
     );
   }
@@ -248,7 +360,7 @@ const MerchantOnboarding = () => {
           <DialogHeader>
             <DialogTitle>支付广告位费用</DialogTitle>
             <DialogDescription>
-              30 元起，1 元 = 1 天广告位。付款后上传截图，等待管理员审核。
+              30 天起，1 元 = 1 天广告位。请按所选天数付款，并上传截图等待审核。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -256,16 +368,16 @@ const MerchantOnboarding = () => {
               <img src={paymentQR} alt="收款码" className="w-48 h-48 object-contain" />
             </div>
             <div>
-              <Label className="text-xs">付款金额（元）</Label>
+              <Label className="text-xs">购买天数（≥ 30 天）</Label>
               <Input
                 type="number"
                 min={30}
-                value={payAmount}
-                onChange={(e) => setPayAmount(Number(e.target.value))}
+                value={payDays}
+                onChange={(e) => setPayDays(Number(e.target.value))}
                 className="mt-1"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                可获得 <span className="text-primary font-semibold">{Math.max(payAmount, 0)}</span> 天广告位
+                应付金额：<span className="text-primary font-semibold">¥{Math.max(payDays || 0, 0)}</span>
               </p>
             </div>
             <div>
@@ -321,6 +433,14 @@ const MerchantOnboarding = () => {
             <Label className="text-xs">微信号（选填）</Label>
             <Input value={contactWechat} maxLength={50} onChange={(e) => setContactWechat(e.target.value)} className="mt-1" />
           </div>
+        </div>
+
+        <div className="bg-card rounded-xl p-4 border border-border space-y-3">
+          <h3 className="text-sm font-bold">必要资质</h3>
+          {renderQualUpload('business', '营业执照', businessLicense)}
+          {renderQualUpload('food', '食品经营许可证 / 健康证', foodLicense)}
+          {renderQualUpload('storefront', '门店实景照片', storefrontPhoto)}
+          <p className="text-[11px] text-muted-foreground">资质仅供平台审核，不会对外公开。</p>
         </div>
 
         <div className="bg-card rounded-xl p-4 border border-border">
