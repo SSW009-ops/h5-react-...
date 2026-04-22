@@ -190,16 +190,19 @@ const MerchantOnboarding = () => {
     if (url) setPayScreenshot(url);
   };
 
+  const isRenewal = !!existing;
+  const minDays = isRenewal ? 5 : 30;
+
   const submitPayment = async () => {
     if (!user || !createdMerchantId) return;
-    if (!payDays || payDays < 30) return toast.error('最低 30 天');
+    if (!payDays || payDays < minDays) return toast.error(`最低 ${minDays} 天`);
     if (!payScreenshot) return toast.error('请上传付款截图');
 
     setPaySubmitting(true);
     const { error } = await supabase.from('merchant_payments').insert({
       merchant_id: createdMerchantId,
       user_id: user.id,
-      amount: payDays, // 1 元 = 1 天，金额 = 天数
+      amount: payDays,
       days_purchased: payDays,
       payment_screenshot_url: payScreenshot,
     });
@@ -308,6 +311,8 @@ const MerchantOnboarding = () => {
               className="mt-5 w-full"
               onClick={() => {
                 setCreatedMerchantId(existing.id);
+                setPayDays(5);
+                setPayScreenshot('');
                 setPayOpen(true);
               }}
             >
@@ -358,9 +363,11 @@ const MerchantOnboarding = () => {
       <Dialog open={payOpen} onOpenChange={setPayOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>支付广告位费用</DialogTitle>
+            <DialogTitle>{isRenewal ? '续费广告位' : '支付广告位费用'}</DialogTitle>
             <DialogDescription>
-              30 天起，1 元 = 1 天广告位。请按所选天数付款，并上传截图等待审核。
+              {isRenewal
+                ? '续费 5 天起，1 元 = 1 天，新天数将累加到现有到期时间上。'
+                : '30 天起，1 元 = 1 天广告位。请按所选天数付款，并上传截图等待审核。'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -368,10 +375,10 @@ const MerchantOnboarding = () => {
               <img src={paymentQR} alt="收款码" className="w-48 h-48 object-contain" />
             </div>
             <div>
-              <Label className="text-xs">购买天数（≥ 30 天）</Label>
+              <Label className="text-xs">购买天数（≥ {minDays} 天）</Label>
               <Input
                 type="number"
-                min={30}
+                min={minDays}
                 value={payDays}
                 onChange={(e) => setPayDays(Number(e.target.value))}
                 className="mt-1"
