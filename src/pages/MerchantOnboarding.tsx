@@ -190,16 +190,19 @@ const MerchantOnboarding = () => {
     if (url) setPayScreenshot(url);
   };
 
+  const isRenewal = !!existing;
+  const minDays = isRenewal ? 5 : 30;
+
   const submitPayment = async () => {
     if (!user || !createdMerchantId) return;
-    if (!payDays || payDays < 30) return toast.error('最低 30 天');
+    if (!payDays || payDays < minDays) return toast.error(`最低 ${minDays} 天`);
     if (!payScreenshot) return toast.error('请上传付款截图');
 
     setPaySubmitting(true);
     const { error } = await supabase.from('merchant_payments').insert({
       merchant_id: createdMerchantId,
       user_id: user.id,
-      amount: payDays, // 1 元 = 1 天，金额 = 天数
+      amount: payDays,
       days_purchased: payDays,
       payment_screenshot_url: payScreenshot,
     });
