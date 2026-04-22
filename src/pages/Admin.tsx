@@ -238,14 +238,14 @@ const Admin = () => {
                   </div>
                 </div>
                 <div className="flex gap-3 text-sm">
-                  <div>付款金额：<span className="font-semibold text-primary">¥{p.amount}</span></div>
-                  <div>申请天数：<span className="font-semibold">{p.days_purchased} 天</span></div>
+                  <div>付款金额（参考）：<span className="font-semibold text-primary">¥{p.amount}</span></div>
+                  <div>申请天数（参考）：<span className="font-semibold">{p.days_purchased} 天</span></div>
                 </div>
                 <a href={p.payment_screenshot_url} target="_blank" rel="noreferrer">
                   <img src={p.payment_screenshot_url} alt="付款截图" className="w-full max-h-64 object-contain bg-muted rounded-lg" />
                 </a>
                 <div>
-                  <Label className="text-xs">实际开通天数（点击通过即生效）</Label>
+                  <Label className="text-xs">实际开通天数（可自由填写，不受付款金额约束）</Label>
                   <Input
                     type="number"
                     min={1}
