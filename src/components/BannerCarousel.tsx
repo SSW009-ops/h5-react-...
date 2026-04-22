@@ -5,7 +5,7 @@ const BannerCarousel = () => {
     <div className="mx-4 mt-4">
       {/* Scrolling notice */}
       <div className="overflow-hidden bg-warning/10 border border-warning/30 rounded-lg mb-3 py-2.5">
-        <div className="whitespace-nowrap animate-[marquee_12s_linear_infinite]">
+        <div className="whitespace-nowrap animate-[marquee_6s_linear_infinite]">
           <span className="text-sm text-warning font-medium px-4">📢 {noticeText}</span>
           <span className="text-sm text-warning font-medium px-4">📢 {noticeText}</span>
         </div>
