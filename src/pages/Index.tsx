@@ -51,7 +51,7 @@ const Index = () => {
         ].map((item) => (
           <button
             key={item.label}
-            onClick={() => navigate('/create-order')}
+            onClick={() => navigate('/create')}
             className="bg-card rounded-xl p-3 flex flex-col items-center gap-1.5 shadow-sm border border-border active:scale-95 transition-transform"
           >
             <span className="text-2xl">{item.emoji}</span>
