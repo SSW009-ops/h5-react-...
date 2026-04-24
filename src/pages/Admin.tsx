@@ -42,6 +42,7 @@ interface UserRow {
   id: string;
   email: string;
   created_at: string;
+  banned_until: string | null;
 }
 
 const Admin = () => {
@@ -169,6 +170,21 @@ const Admin = () => {
     if (error) return toast.error(`下架失败：${error.message}`);
     toast.success('已下架');
     fetchMerchants();
+  };
+
+  const banUser = async (u: UserRow) => {
+    if (!confirm(`确认封禁账号 ${u.email}？封禁后该用户将无法登录。`)) return;
+    const { error } = await supabase.rpc('admin_ban_user', { target_user_id: u.id, until: null });
+    if (error) return toast.error(`封禁失败：${error.message}`);
+    toast.success('已封禁');
+    fetchUsers();
+  };
+
+  const unbanUser = async (u: UserRow) => {
+    const { error } = await supabase.rpc('admin_unban_user', { target_user_id: u.id });
+    if (error) return toast.error(`解封失败：${error.message}`);
+    toast.success('已解封');
+    fetchUsers();
   };
 
   if (!user) {
