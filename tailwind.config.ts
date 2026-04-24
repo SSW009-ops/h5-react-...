@@ -88,7 +88,7 @@ export default {
           "100%": { transform: "translateX(-100%)" },
         },
         "marquee": {
-          "0%": { transform: "translateX(100%)" },
+          "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-100%)" },
         },
       },
