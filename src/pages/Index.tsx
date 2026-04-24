@@ -8,6 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import { Package } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,10 +49,14 @@ const Index = () => {
           { emoji: '🍜', label: '代取餐' },
           { emoji: '🔧', label: '其他' },
         ].map((item) => (
-          <div key={item.label} className="bg-card rounded-xl p-3 flex flex-col items-center gap-1.5 shadow-sm border border-border">
+          <button
+            key={item.label}
+            onClick={() => navigate('/create-order')}
+            className="bg-card rounded-xl p-3 flex flex-col items-center gap-1.5 shadow-sm border border-border active:scale-95 transition-transform"
+          >
             <span className="text-2xl">{item.emoji}</span>
             <span className="text-xs font-medium text-foreground">{item.label}</span>
-          </div>
+          </button>
         ))}
       </div>
 
