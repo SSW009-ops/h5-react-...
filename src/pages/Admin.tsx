@@ -343,13 +343,30 @@ const Admin = () => {
       {!loading && tab === 'users' && (
         <div className="mx-4 mt-4 space-y-2">
           <div className="text-xs text-muted-foreground px-1">共 {users.length} 个用户</div>
-          {users.map((u) => (
-            <div key={u.id} className="bg-card rounded-xl border border-border p-3">
-              <div className="text-sm font-medium text-foreground break-all">{u.email}</div>
-              <div className="mt-1 text-xs text-muted-foreground">注册：{new Date(u.created_at).toLocaleString('zh-CN')}</div>
-              <div className="text-[11px] text-muted-foreground/70 break-all mt-0.5">UID: {u.id}</div>
-            </div>
-          ))}
+          {users.map((u) => {
+            const isBanned = !!u.banned_until && new Date(u.banned_until) > new Date();
+            return (
+              <div key={u.id} className="bg-card rounded-xl border border-border p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-foreground break-all">{u.email}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">注册：{new Date(u.created_at).toLocaleString('zh-CN')}</div>
+                    <div className="text-[11px] text-muted-foreground/70 break-all mt-0.5">UID: {u.id}</div>
+                    {isBanned && (
+                      <div className="mt-1 text-xs text-destructive font-medium">已封禁</div>
+                    )}
+                  </div>
+                  {u.id !== user?.id && (
+                    isBanned ? (
+                      <Button size="sm" variant="outline" onClick={() => unbanUser(u)}>解封</Button>
+                    ) : (
+                      <Button size="sm" variant="destructive" onClick={() => banUser(u)}>封禁</Button>
+                    )
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
