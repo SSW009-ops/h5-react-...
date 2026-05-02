@@ -22,6 +22,8 @@ interface MerchantRow {
   status: string;
   store_name: string;
   ad_expires_at: string | null;
+  is_open?: boolean;
+  payment_qr_url?: string | null;
 }
 
 const MerchantOnboarding = () => {
@@ -43,6 +45,8 @@ const MerchantOnboarding = () => {
   const [businessLicense, setBusinessLicense] = useState('');
   const [foodLicense, setFoodLicense] = useState('');
   const [storefrontPhoto, setStorefrontPhoto] = useState('');
+  const [paymentQR, setPaymentQR] = useState('');
+  const [isOpen, setIsOpen] = useState(true);
   const [qualUploading, setQualUploading] = useState<Record<string, boolean>>({});
 
   // payment dialog
@@ -64,11 +68,16 @@ const MerchantOnboarding = () => {
     }
     supabase
       .from('merchants')
-      .select('id, status, store_name, ad_expires_at')
+      .select('id, status, store_name, ad_expires_at, is_open, payment_qr_url')
       .eq('user_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setExisting(data as MerchantRow);
+        if (data) {
+          const row = data as MerchantRow;
+          setExisting(row);
+          setIsOpen(row.is_open ?? true);
+          setPaymentQR(row.payment_qr_url ?? '');
+        }
         setLoading(false);
       });
   }, [user]);
@@ -109,6 +118,13 @@ const MerchantOnboarding = () => {
     if (key === 'business') setBusinessLicense(url);
     if (key === 'food') setFoodLicense(url);
     if (key === 'storefront') setStorefrontPhoto(url);
+  };
+
+  const handlePaymentQRUpload = async (file: File) => {
+    setQualUploading((s) => ({ ...s, payqr: true }));
+    const url = await uploadImage(file);
+    setQualUploading((s) => ({ ...s, payqr: false }));
+    if (url) setPaymentQR(url);
   };
 
   const addProduct = () => {
