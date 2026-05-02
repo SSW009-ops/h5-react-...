@@ -457,7 +457,7 @@ const MerchantOnboarding = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="bg-muted rounded-xl p-3 flex justify-center">
-              <img src={paymentQR} alt="收款码" className="w-48 h-48 object-contain" />
+              <img src={platformPaymentQR} alt="收款码" className="w-48 h-48 object-contain" />
             </div>
             <div>
               <Label className="text-xs">购买天数（≥ {minDays} 天）</Label>
