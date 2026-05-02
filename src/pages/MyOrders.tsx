@@ -6,7 +6,7 @@ import OrderCard, { Order } from '@/components/OrderCard';
 import OrderDetailDialog from '@/components/OrderDetailDialog';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
-import { LogOut, Store, Shield, ChevronRight } from 'lucide-react';
+import { LogOut, Store, Shield, ChevronRight, UtensilsCrossed } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -118,6 +118,19 @@ const MyOrders = () => {
 
       {/* Entries */}
       <div className="mx-4 mt-4 bg-card rounded-xl border border-border overflow-hidden">
+        <button
+          onClick={() => navigate('/food-orders')}
+          className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors border-b border-border"
+        >
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <UtensilsCrossed className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-sm font-medium text-foreground">我的外卖订单</div>
+            <div className="text-xs text-muted-foreground">附近外卖下单记录</div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
         <button
           onClick={() => navigate('/merchant-onboarding')}
           className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors border-b border-border"

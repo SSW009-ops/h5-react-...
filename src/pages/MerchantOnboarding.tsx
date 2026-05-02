@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import paymentQR from '@/assets/payment-qr.jpg';
+import platformPaymentQR from '@/assets/payment-qr.jpg';
 
 interface ProductDraft {
   product_name: string;
@@ -22,6 +22,8 @@ interface MerchantRow {
   status: string;
   store_name: string;
   ad_expires_at: string | null;
+  is_open?: boolean;
+  payment_qr_url?: string | null;
 }
 
 const MerchantOnboarding = () => {
@@ -43,6 +45,8 @@ const MerchantOnboarding = () => {
   const [businessLicense, setBusinessLicense] = useState('');
   const [foodLicense, setFoodLicense] = useState('');
   const [storefrontPhoto, setStorefrontPhoto] = useState('');
+  const [paymentQR, setPaymentQR] = useState('');
+  const [isOpen, setIsOpen] = useState(true);
   const [qualUploading, setQualUploading] = useState<Record<string, boolean>>({});
 
   // payment dialog
@@ -64,11 +68,16 @@ const MerchantOnboarding = () => {
     }
     supabase
       .from('merchants')
-      .select('id, status, store_name, ad_expires_at')
+      .select('id, status, store_name, ad_expires_at, is_open, payment_qr_url')
       .eq('user_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setExisting(data as MerchantRow);
+        if (data) {
+          const row = data as MerchantRow;
+          setExisting(row);
+          setIsOpen(row.is_open ?? true);
+          setPaymentQR(row.payment_qr_url ?? '');
+        }
         setLoading(false);
       });
   }, [user]);
@@ -111,6 +120,13 @@ const MerchantOnboarding = () => {
     if (key === 'storefront') setStorefrontPhoto(url);
   };
 
+  const handlePaymentQRUpload = async (file: File) => {
+    setQualUploading((s) => ({ ...s, payqr: true }));
+    const url = await uploadImage(file);
+    setQualUploading((s) => ({ ...s, payqr: false }));
+    if (url) setPaymentQR(url);
+  };
+
   const addProduct = () => {
     if (products.length >= 20) {
       toast.error('最多 20 个产品');
@@ -134,6 +150,7 @@ const MerchantOnboarding = () => {
     if (!businessLicense) return toast.error('请上传营业执照');
     if (!foodLicense) return toast.error('请上传食品经营许可证 / 健康证');
     if (!storefrontPhoto) return toast.error('请上传门店实景照片');
+    if (!paymentQR) return toast.error('请上传收款二维码');
     const validProducts = products.filter((p) => p.product_name.trim() && p.price.trim() && p.image_url);
     if (validProducts.length === 0) return toast.error('请至少添加一个产品（含名称、价格、图片）');
 
@@ -150,6 +167,8 @@ const MerchantOnboarding = () => {
           business_license_url: businessLicense,
           food_license_url: foodLicense,
           storefront_photo_url: storefrontPhoto,
+          payment_qr_url: paymentQR,
+          is_open: isOpen,
           status: 'pending',
         },
         { onConflict: 'user_id' }
@@ -320,6 +339,72 @@ const MerchantOnboarding = () => {
             </Button>
           </div>
         </div>
+
+        {isActive && (
+          <div className="mx-4 mt-4 bg-card rounded-2xl p-5 border border-border space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-bold">营业状态</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {isOpen ? '营业中，用户可下单' : '已休息，用户无法下单'}
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                  const next = !isOpen;
+                  setIsOpen(next);
+                  const { error } = await supabase
+                    .from('merchants')
+                    .update({ is_open: next })
+                    .eq('id', existing.id);
+                  if (error) {
+                    setIsOpen(!next);
+                    toast.error(`更新失败：${error.message}`);
+                  } else {
+                    toast.success(next ? '已开始营业' : '已暂停营业');
+                  }
+                }}
+                className={`relative w-12 h-7 rounded-full transition-colors ${isOpen ? 'bg-success' : 'bg-muted'}`}
+              >
+                <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${isOpen ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+
+            <div>
+              <Label className="text-xs">收款二维码</Label>
+              <label className="mt-1 block">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    const url = await uploadImage(f);
+                    if (!url) return;
+                    setPaymentQR(url);
+                    const { error } = await supabase
+                      .from('merchants')
+                      .update({ payment_qr_url: url })
+                      .eq('id', existing.id);
+                    if (error) toast.error(`更新失败：${error.message}`);
+                    else toast.success('收款码已更新');
+                  }}
+                />
+                <div className="border-2 border-dashed border-border rounded-lg h-40 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-muted/30">
+                  {paymentQR ? (
+                    <img src={paymentQR} alt="收款码" className="h-full object-contain" />
+                  ) : (
+                    <div className="text-center">
+                      <Upload className="w-4 h-4 mx-auto text-muted-foreground" />
+                      <span className="text-[11px] text-muted-foreground mt-1 block">点击上传收款码</span>
+                    </div>
+                  )}
+                </div>
+              </label>
+            </div>
+          </div>
+        )}
         {renderPayDialog()}
       </div>
     );
@@ -372,7 +457,7 @@ const MerchantOnboarding = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="bg-muted rounded-xl p-3 flex justify-center">
-              <img src={paymentQR} alt="收款码" className="w-48 h-48 object-contain" />
+              <img src={platformPaymentQR} alt="收款码" className="w-48 h-48 object-contain" />
             </div>
             <div>
               <Label className="text-xs">购买天数（≥ {minDays} 天）</Label>
@@ -448,6 +533,48 @@ const MerchantOnboarding = () => {
           {renderQualUpload('food', '食品经营许可证 / 健康证', foodLicense)}
           {renderQualUpload('storefront', '门店实景照片', storefrontPhoto)}
           <p className="text-[11px] text-muted-foreground">资质仅供平台审核，不会对外公开。</p>
+        </div>
+
+        <div className="bg-card rounded-xl p-4 border border-border space-y-3">
+          <h3 className="text-sm font-bold">收款 / 营业</h3>
+          <div>
+            <Label className="text-xs">收款二维码 *（用户下单时扫码付款）</Label>
+            <label className="mt-1 block">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handlePaymentQRUpload(e.target.files[0])}
+              />
+              <div className="border-2 border-dashed border-border rounded-lg h-40 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-muted/30">
+                {qualUploading.payqr ? (
+                  <span className="text-xs text-muted-foreground">上传中...</span>
+                ) : paymentQR ? (
+                  <img src={paymentQR} alt="收款码" className="h-full object-contain" />
+                ) : (
+                  <div className="text-center">
+                    <Upload className="w-4 h-4 mx-auto text-muted-foreground" />
+                    <span className="text-[11px] text-muted-foreground mt-1 block">点击上传收款码（微信/支付宝）</span>
+                  </div>
+                )}
+              </div>
+            </label>
+          </div>
+          <div className="flex items-center justify-between pt-1">
+            <div>
+              <div className="text-xs font-medium">营业状态</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">
+                {isOpen ? '营业中' : '休息中'}（入驻后可随时切换）
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen((v) => !v)}
+              className={`relative w-12 h-7 rounded-full transition-colors ${isOpen ? 'bg-success' : 'bg-muted'}`}
+            >
+              <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${isOpen ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
         </div>
 
         <div className="bg-card rounded-xl p-4 border border-border">
