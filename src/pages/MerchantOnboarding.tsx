@@ -535,6 +535,48 @@ const MerchantOnboarding = () => {
           <p className="text-[11px] text-muted-foreground">资质仅供平台审核，不会对外公开。</p>
         </div>
 
+        <div className="bg-card rounded-xl p-4 border border-border space-y-3">
+          <h3 className="text-sm font-bold">收款 / 营业</h3>
+          <div>
+            <Label className="text-xs">收款二维码 *（用户下单时扫码付款）</Label>
+            <label className="mt-1 block">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handlePaymentQRUpload(e.target.files[0])}
+              />
+              <div className="border-2 border-dashed border-border rounded-lg h-40 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-muted/30">
+                {qualUploading.payqr ? (
+                  <span className="text-xs text-muted-foreground">上传中...</span>
+                ) : paymentQR ? (
+                  <img src={paymentQR} alt="收款码" className="h-full object-contain" />
+                ) : (
+                  <div className="text-center">
+                    <Upload className="w-4 h-4 mx-auto text-muted-foreground" />
+                    <span className="text-[11px] text-muted-foreground mt-1 block">点击上传收款码（微信/支付宝）</span>
+                  </div>
+                )}
+              </div>
+            </label>
+          </div>
+          <div className="flex items-center justify-between pt-1">
+            <div>
+              <div className="text-xs font-medium">营业状态</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">
+                {isOpen ? '营业中' : '休息中'}（入驻后可随时切换）
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen((v) => !v)}
+              className={`relative w-12 h-7 rounded-full transition-colors ${isOpen ? 'bg-success' : 'bg-muted'}`}
+            >
+              <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${isOpen ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+        </div>
+
         <div className="bg-card rounded-xl p-4 border border-border">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold">主营产品 *</h3>
