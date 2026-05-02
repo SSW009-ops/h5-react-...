@@ -12,6 +12,7 @@ import MyOrders from "./pages/MyOrders";
 import MerchantOnboarding from "./pages/MerchantOnboarding";
 import MerchantDetail from "./pages/MerchantDetail";
 import NearbyList from "./pages/NearbyList";
+import FoodOrders from "./pages/FoodOrders";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/merchant-onboarding" element={<MerchantOnboarding />} />
             <Route path="/merchant/:id" element={<MerchantDetail />} />
             <Route path="/nearby" element={<NearbyList />} />
+            <Route path="/food-orders" element={<FoodOrders />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
