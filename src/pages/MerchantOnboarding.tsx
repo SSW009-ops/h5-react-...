@@ -150,6 +150,7 @@ const MerchantOnboarding = () => {
     if (!businessLicense) return toast.error('请上传营业执照');
     if (!foodLicense) return toast.error('请上传食品经营许可证 / 健康证');
     if (!storefrontPhoto) return toast.error('请上传门店实景照片');
+    if (!paymentQR) return toast.error('请上传收款二维码');
     const validProducts = products.filter((p) => p.product_name.trim() && p.price.trim() && p.image_url);
     if (validProducts.length === 0) return toast.error('请至少添加一个产品（含名称、价格、图片）');
 
@@ -166,6 +167,8 @@ const MerchantOnboarding = () => {
           business_license_url: businessLicense,
           food_license_url: foodLicense,
           storefront_photo_url: storefrontPhoto,
+          payment_qr_url: paymentQR,
+          is_open: isOpen,
           status: 'pending',
         },
         { onConflict: 'user_id' }
