@@ -83,8 +83,24 @@ const Admin = () => {
       .select('id, store_name, contact_phone, status, ad_expires_at, user_id')
       .in('status', ['active', 'pending'])
       .order('ad_expires_at', { ascending: false, nullsFirst: false });
-    setMerchants((data as ActiveMerchant[]) || []);
+    const list = (data as ActiveMerchant[]) || [];
+    setMerchants(list);
     setLoading(false);
+    // fetch order stats per merchant
+    if (list.length) {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const stats: Record<string, { total: number; recent7: number }> = {};
+      await Promise.all(
+        list.map(async (m) => {
+          const [{ count: total }, { count: recent7 }] = await Promise.all([
+            supabase.from('food_orders').select('id', { count: 'exact', head: true }).eq('merchant_id', m.id),
+            supabase.from('food_orders').select('id', { count: 'exact', head: true }).eq('merchant_id', m.id).gte('created_at', sevenDaysAgo),
+          ]);
+          stats[m.id] = { total: total || 0, recent7: recent7 || 0 };
+        }),
+      );
+      setMerchantStats(stats);
+    }
   };
 
   const fetchOrders = async () => {
