@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import platformPaymentQR from '@/assets/payment-qr.jpg';
+import MerchantOrdersPanel from '@/components/MerchantOrdersPanel';
 
 interface ProductDraft {
   product_name: string;
