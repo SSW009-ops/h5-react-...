@@ -529,7 +529,7 @@ const MerchantOnboarding = () => {
     <div className="min-h-screen bg-background pb-24">
       <div className="bg-card px-4 pt-12 pb-4 flex items-center gap-3 border-b border-border">
         <button onClick={() => navigate(-1)}><ChevronLeft className="w-5 h-5" /></button>
-        <h1 className="text-base font-bold">商家入驻</h1>
+        <h1 className="text-base font-bold">商家入驻 / 订单管理</h1>
       </div>
 
       <div className="mx-4 mt-5 space-y-4">

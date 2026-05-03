@@ -139,7 +139,7 @@ const MyOrders = () => {
             <Store className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1 text-left">
-            <div className="text-sm font-medium text-foreground">商家入驻</div>
+            <div className="text-sm font-medium text-foreground">商家入驻 / 订单管理</div>
             <div className="text-xs text-muted-foreground">入驻附近外卖，曝光更多客户</div>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
