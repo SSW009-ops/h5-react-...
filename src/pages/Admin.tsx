@@ -54,6 +54,7 @@ const Admin = () => {
   const [payments, setPayments] = useState<PendingPayment[]>([]);
   const [approveDays, setApproveDays] = useState<Record<string, number>>({});
   const [merchants, setMerchants] = useState<ActiveMerchant[]>([]);
+  const [merchantStats, setMerchantStats] = useState<Record<string, { total: number; recent7: number }>>({});
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [emailMap, setEmailMap] = useState<Record<string, string>>({});
