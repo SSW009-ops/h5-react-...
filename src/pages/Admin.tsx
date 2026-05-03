@@ -313,6 +313,9 @@ const Admin = () => {
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold text-foreground truncate">{m.store_name}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">{m.contact_phone}</div>
+                    <div className="text-[11px] text-muted-foreground mt-1">
+                      外卖订单：总 {merchantStats[m.id]?.total ?? '-'} · 近7日 {merchantStats[m.id]?.recent7 ?? '-'}
+                    </div>
                     <div className="text-xs mt-1">
                       {isActive ? (
                         <span className="text-success">展示中 · 到期 {new Date(m.ad_expires_at!).toLocaleDateString('zh-CN')}</span>
