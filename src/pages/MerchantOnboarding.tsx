@@ -343,68 +343,87 @@ const MerchantOnboarding = () => {
         </div>
 
         {isActive && (
-          <div className="mx-4 mt-4 bg-card rounded-2xl p-5 border border-border space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-bold">营业状态</div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {isOpen ? '营业中，用户可下单' : '已休息，用户无法下单'}
-                </div>
-              </div>
+          <div className="mx-4 mt-4">
+            <div className="flex gap-2 mb-3">
               <button
-                onClick={async () => {
-                  const next = !isOpen;
-                  setIsOpen(next);
-                  const { error } = await supabase
-                    .from('merchants')
-                    .update({ is_open: next })
-                    .eq('id', existing.id);
-                  if (error) {
-                    setIsOpen(!next);
-                    toast.error(`更新失败：${error.message}`);
-                  } else {
-                    toast.success(next ? '已开始营业' : '已暂停营业');
-                  }
-                }}
-                className={`relative w-12 h-7 rounded-full transition-colors ${isOpen ? 'bg-success' : 'bg-muted'}`}
-              >
-                <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${isOpen ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
-              </button>
+                onClick={() => setActiveTab('settings')}
+                className={`flex-1 py-2 text-sm rounded-lg ${activeTab === 'settings' ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground'}`}
+              >设置</button>
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`flex-1 py-2 text-sm rounded-lg ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground'}`}
+              >外卖订单</button>
             </div>
 
-            <div>
-              <Label className="text-xs">收款二维码</Label>
-              <label className="mt-1 block">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={async (e) => {
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    const url = await uploadImage(f);
-                    if (!url) return;
-                    setPaymentQR(url);
-                    const { error } = await supabase
-                      .from('merchants')
-                      .update({ payment_qr_url: url })
-                      .eq('id', existing.id);
-                    if (error) toast.error(`更新失败：${error.message}`);
-                    else toast.success('收款码已更新');
-                  }}
-                />
-                <div className="border-2 border-dashed border-border rounded-lg h-40 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-muted/30">
-                  {paymentQR ? (
-                    <img src={paymentQR} alt="收款码" className="h-full object-contain" />
-                  ) : (
-                    <div className="text-center">
-                      <Upload className="w-4 h-4 mx-auto text-muted-foreground" />
-                      <span className="text-[11px] text-muted-foreground mt-1 block">点击上传收款码</span>
+            {activeTab === 'settings' && (
+              <div className="bg-card rounded-2xl p-5 border border-border space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-bold">营业状态</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {isOpen ? '营业中，用户可下单' : '已休息，用户无法下单'}
                     </div>
-                  )}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const next = !isOpen;
+                      setIsOpen(next);
+                      const { error } = await supabase
+                        .from('merchants')
+                        .update({ is_open: next })
+                        .eq('id', existing.id);
+                      if (error) {
+                        setIsOpen(!next);
+                        toast.error(`更新失败：${error.message}`);
+                      } else {
+                        toast.success(next ? '已开始营业' : '已暂停营业');
+                      }
+                    }}
+                    className={`relative w-12 h-7 rounded-full transition-colors ${isOpen ? 'bg-success' : 'bg-muted'}`}
+                  >
+                    <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${isOpen ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                  </button>
                 </div>
-              </label>
-            </div>
+
+                <div>
+                  <Label className="text-xs">收款二维码</Label>
+                  <label className="mt-1 block">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        const url = await uploadImage(f);
+                        if (!url) return;
+                        setPaymentQR(url);
+                        const { error } = await supabase
+                          .from('merchants')
+                          .update({ payment_qr_url: url })
+                          .eq('id', existing.id);
+                        if (error) toast.error(`更新失败：${error.message}`);
+                        else toast.success('收款码已更新');
+                      }}
+                    />
+                    <div className="border-2 border-dashed border-border rounded-lg h-40 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-muted/30">
+                      {paymentQR ? (
+                        <img src={paymentQR} alt="收款码" className="h-full object-contain" />
+                      ) : (
+                        <div className="text-center">
+                          <Upload className="w-4 h-4 mx-auto text-muted-foreground" />
+                          <span className="text-[11px] text-muted-foreground mt-1 block">点击上传收款码</span>
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'orders' && (
+              <MerchantOrdersPanel merchantId={existing.id} />
+            )}
           </div>
         )}
         {renderPayDialog()}
