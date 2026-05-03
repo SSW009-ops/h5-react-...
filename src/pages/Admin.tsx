@@ -54,6 +54,7 @@ const Admin = () => {
   const [payments, setPayments] = useState<PendingPayment[]>([]);
   const [approveDays, setApproveDays] = useState<Record<string, number>>({});
   const [merchants, setMerchants] = useState<ActiveMerchant[]>([]);
+  const [merchantStats, setMerchantStats] = useState<Record<string, { total: number; recent7: number }>>({});
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [emailMap, setEmailMap] = useState<Record<string, string>>({});
@@ -82,8 +83,24 @@ const Admin = () => {
       .select('id, store_name, contact_phone, status, ad_expires_at, user_id')
       .in('status', ['active', 'pending'])
       .order('ad_expires_at', { ascending: false, nullsFirst: false });
-    setMerchants((data as ActiveMerchant[]) || []);
+    const list = (data as ActiveMerchant[]) || [];
+    setMerchants(list);
     setLoading(false);
+    // fetch order stats per merchant
+    if (list.length) {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const stats: Record<string, { total: number; recent7: number }> = {};
+      await Promise.all(
+        list.map(async (m) => {
+          const [{ count: total }, { count: recent7 }] = await Promise.all([
+            supabase.from('food_orders').select('id', { count: 'exact', head: true }).eq('merchant_id', m.id),
+            supabase.from('food_orders').select('id', { count: 'exact', head: true }).eq('merchant_id', m.id).gte('created_at', sevenDaysAgo),
+          ]);
+          stats[m.id] = { total: total || 0, recent7: recent7 || 0 };
+        }),
+      );
+      setMerchantStats(stats);
+    }
   };
 
   const fetchOrders = async () => {
@@ -296,6 +313,9 @@ const Admin = () => {
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold text-foreground truncate">{m.store_name}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">{m.contact_phone}</div>
+                    <div className="text-[11px] text-muted-foreground mt-1">
+                      外卖订单：总 {merchantStats[m.id]?.total ?? '-'} · 近7日 {merchantStats[m.id]?.recent7 ?? '-'}
+                    </div>
                     <div className="text-xs mt-1">
                       {isActive ? (
                         <span className="text-success">展示中 · 到期 {new Date(m.ad_expires_at!).toLocaleDateString('zh-CN')}</span>
