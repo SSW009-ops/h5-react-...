@@ -61,6 +61,7 @@ const MerchantOnboarding = () => {
   // swipe-to-delete state for existing record
   const [swipeOffset, setSwipeOffset] = useState(0);
   const touchStartX = useRef<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'settings' | 'orders'>('settings');
 
   useEffect(() => {
     if (!user) {
